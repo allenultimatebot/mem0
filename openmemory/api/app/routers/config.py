@@ -15,6 +15,7 @@ class LLMConfig(BaseModel):
     max_tokens: int = Field(..., description="Maximum tokens to generate")
     api_key: Optional[str] = Field(None, description="API key or 'env:API_KEY' to use environment variable")
     ollama_base_url: Optional[str] = Field(None, description="Base URL for Ollama server (e.g., http://host.docker.internal:11434)")
+    openai_base_url: Optional[str] = Field(None, description="Base URL for an OpenAI-compatible LLM gateway (e.g. 'env:LLM_BASE_URL' → http://host.docker.internal:20128/v1). Without this field the schema would silently drop it on save, making mem0 fall back to api.openai.com and fail with 401.")
 
 class LLMProvider(BaseModel):
     provider: str = Field(..., description="LLM provider name")
