@@ -19,8 +19,13 @@ services:
       - "8765:8765"
     volumes:
       - ./api:/usr/src/openmemory
+    # Single worker, NO --reload. SSE-based MCP keeps per-session state in-process,
+    # so --reload (which restarts the worker whenever a file under ./api changes —
+    # incl. code patches) silently drops every connected client's MCP session and
+    # their next tool call fails with "-32602 request before initialization". Patch
+    # mcp_server.py then `docker compose restart openmemory-mcp` to load changes.
     command: >
-      sh -c "uvicorn main:app --host 0.0.0.0 --port 8765 --reload --workers 4"
+      sh -c "uvicorn main:app --host 0.0.0.0 --port 8765 --workers 1"
   openmemory-ui:
     build:
       context: ui/

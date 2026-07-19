@@ -177,9 +177,9 @@ async def search_memory(query: str) -> str:
             embeddings = memory_client.embedding_model.embed(query, "search")
 
             hits = memory_client.vector_store.search(
-                query=query, 
-                vectors=embeddings, 
-                limit=10, 
+                query=query,
+                vectors=embeddings,
+                top_k=10,  # installed mem0 (2.0.4) Qdrant.search expects top_k, not limit
                 filters=filters,
             )
 
@@ -244,8 +244,10 @@ async def list_memories() -> str:
             # Get or create user and app
             user, app = get_user_and_app(db, user_id=uid, app_id=client_name)
 
-            # Get all memories
-            memories = memory_client.get_all(user_id=uid)
+            # Get all memories. Installed mem0 rejects a top-level user_id on
+            # get_all ("Top-level entity parameters ... not supported") — pass it
+            # through filters, mirroring the search path above.
+            memories = memory_client.get_all(filters={"user_id": uid})
             filtered_memories = []
 
             # Filter memories based on permissions

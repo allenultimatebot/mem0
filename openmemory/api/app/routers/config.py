@@ -48,6 +48,12 @@ class ConfigSchema(BaseModel):
 
 def get_default_configuration():
     """Get the default configuration with sensible defaults for LLM and embedder."""
+    # NOTE: These DB-seed defaults intentionally mirror the env-var wiring in
+    # api/.env (9router LLM + local Ollama embedder). get_config_from_db()
+    # auto-seeds this row on first read (e.g. when the dashboard loads), and
+    # get_memory_client() lets the DB row OVERRIDE env vars. Keeping these in
+    # sync prevents a dashboard visit from silently clobbering the runtime
+    # config with OpenAI defaults (which would break writes — no OpenAI key).
     return {
         "openmemory": {
             "custom_instructions": None
@@ -56,17 +62,18 @@ def get_default_configuration():
             "llm": {
                 "provider": "openai",
                 "config": {
-                    "model": "gpt-4o-mini",
+                    "model": "cx/gpt-5.6-luna",
                     "temperature": 0.1,
                     "max_tokens": 2000,
-                    "api_key": "env:OPENAI_API_KEY"
+                    "api_key": "env:LLM_API_KEY",
+                    "openai_base_url": "env:LLM_BASE_URL"
                 }
             },
             "embedder": {
-                "provider": "openai",
+                "provider": "ollama",
                 "config": {
-                    "model": "text-embedding-3-small",
-                    "api_key": "env:OPENAI_API_KEY"
+                    "model": "nomic-embed-text",
+                    "ollama_base_url": "http://host.docker.internal:11434"
                 }
             },
             "vector_store": None

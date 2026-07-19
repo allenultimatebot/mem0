@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import List
 
 from app.utils.prompts import MEMORY_CATEGORIZATION_PROMPT
@@ -8,7 +9,34 @@ from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 load_dotenv()
-openai_client = OpenAI()
+
+# The categorizer is independent of mem0's config system. Point it at the same
+# OpenAI-compatible gateway as the LLM (9router) via LLM_BASE_URL/LLM_API_KEY so
+# it doesn't require a real OPENAI_API_KEY. Lazily instantiated so a missing key
+# can never crash module import (which previously took down the whole API).
+_openai_client = None
+
+
+def _get_client() -> OpenAI:
+    global _openai_client
+    if _openai_client is None:
+        base_url = os.environ.get("LLM_BASE_URL") or os.environ.get("OPENAI_BASE_URL")
+        api_key = (
+            os.environ.get("LLM_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("API_KEY")
+            or "not-needed"
+        )
+        kwargs = {"api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        _openai_client = OpenAI(**kwargs)
+    return _openai_client
+
+
+# Model used for categorization. Defaults to the configured LLM so it routes
+# through the same gateway; override with CATEGORIZATION_MODEL if desired.
+_CATEGORIZATION_MODEL = os.environ.get("CATEGORIZATION_MODEL") or os.environ.get("LLM_MODEL") or "gpt-4o-mini"
 
 
 class MemoryCategories(BaseModel):
@@ -23,9 +51,9 @@ def get_categories_for_memory(memory: str) -> List[str]:
             {"role": "user", "content": memory}
         ]
 
-        # Let OpenAI handle the pydantic parsing directly
-        completion = openai_client.beta.chat.completions.parse(
-            model="gpt-4o-mini",
+        # Let the gateway handle the pydantic parsing directly
+        completion = _get_client().beta.chat.completions.parse(
+            model=_CATEGORIZATION_MODEL,
             messages=messages,
             response_format=MemoryCategories,
             temperature=0

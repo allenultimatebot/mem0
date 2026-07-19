@@ -323,6 +323,10 @@ def get_default_memory_config():
         vector_store_provider = "qdrant"
         vector_store_config.update({
             "port": 6333,
+            # Match the embedder's output dimensions. nomic-embed-text = 768.
+            # Qdrant creates the collection with this size on first write; a
+            # mismatch here vs. the embedder throws a dimension error.
+            "embedding_model_dims": int(os.environ.get("EMBEDDING_MODEL_DIMS", "768")),
         })
     
     print(f"Auto-detected vector store: {vector_store_provider} with config: {vector_store_config}")
