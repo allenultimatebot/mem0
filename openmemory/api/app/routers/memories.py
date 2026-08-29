@@ -18,7 +18,7 @@ from app.models import (
 )
 from app.schemas import MemoryResponse
 from app.utils.memory import get_memory_client
-from app.utils.permissions import check_memory_access_permissions
+from app.utils.permissions import accessible_memory_id_set
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
@@ -176,6 +176,7 @@ async def list_memories(
     ).distinct(Memory.id)
 
     # Get paginated results with transformer
+    accessible_ids = accessible_memory_id_set(db, app_id, user.id)
     return sqlalchemy_paginate(
         query,
         params,
@@ -191,7 +192,7 @@ async def list_memories(
                 metadata_=memory.metadata_
             )
             for memory in items
-            if check_memory_access_permissions(db, memory, app_id)
+            if memory.id in accessible_ids
         ]
     )
 
@@ -226,6 +227,15 @@ class CreateMemoryRequest(BaseModel):
     metadata: dict = {}
     infer: bool = True
     app: str = "openmemory"
+
+
+def _write_rejected(reason: str, error: Exception | None = None) -> dict:
+    logging.warning("Memory write rejected: %s%s", reason, f" ({error})" if error else "")
+    return {"accepted": 0, "reason": reason}
+
+
+def _write_failure_reason(error: Exception) -> str:
+    return "database_unavailable" if isinstance(error, OperationalError) else "extraction_error"
 
 
 # Create new memory

@@ -20,6 +20,8 @@ import contextvars
 import datetime
 import json
 import logging
+import os
+import time
 import uuid
 
 import anyio
@@ -27,8 +29,10 @@ import anyio
 from app.database import SessionLocal
 from app.models import Memory, MemoryAccessLog, MemoryState, MemoryStatusHistory, categorize_memory_by_id
 from app.utils.db import get_user_and_app
+from app.utils.search_log import log_search
 from app.utils.memory import get_memory_client
-from app.utils.permissions import check_memory_access_permissions
+from app.utils.permissions import accessible_memory_id_set
+from app.utils.retrieval import relative_cutoff, retrieval_params
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.routing import APIRouter
@@ -62,6 +66,7 @@ mcp_router = APIRouter(prefix="/mcp")
 
 # Initialize SSE transport
 sse = SseServerTransport("/mcp/messages/")
+_last_search_ids = {}
 _categorization_tasks = set()
 
 
@@ -162,8 +167,106 @@ async def add_memories(text: str, infer: bool = True) -> str:
         return f"Error adding to memory: {e}"
 
 
-@mcp.tool(description="Search through stored memories. This method is called EVERYTIME the user asks anything.")
-async def search_memory(query: str) -> str:
+def _search_memory_sync(query, top_k, mark_used, uid, client_name, memory_client):
+    db = SessionLocal()
+    try:
+        user, app = get_user_and_app(db, user_id=uid, app_id=client_name)
+        requested = max(1, min(int(top_k), 50))
+        overfetch = max(50, requested * 5)
+        allowed = accessible_memory_id_set(db, app.id)
+        filters = {"user_id": uid}
+
+        embeddings = memory_client.embedding_model.embed(query, "search")
+        hits = memory_client.vector_store.search(
+            query=query,
+            vectors=embeddings,
+            top_k=overfetch,
+            filters=filters,
+        )
+        vector_ids = []
+        vector_scores = {}
+        vector_payloads = {}
+        for hit in hits:
+            if hit.id is None:
+                continue
+            memory_id = str(hit.id)
+            vector_ids.append(memory_id)
+            vector_scores[memory_id] = hit.score
+            vector_payloads[memory_id] = hit.payload or {}
+
+        ids = vector_ids
+        memory_uuid_ids = []
+        for memory_id in ids:
+            try:
+                memory_uuid_ids.append(uuid.UUID(memory_id))
+            except ValueError:
+                continue
+        memory_rows = db.query(Memory).filter(Memory.id.in_(memory_uuid_ids)).all() if memory_uuid_ids else []
+        rows = {str(memory.id): memory for memory in memory_rows}
+        candidates = []
+        for memory_id in ids:
+            memory = rows.get(memory_id)
+            if not memory or memory.id not in allowed:
+                continue
+            metadata = memory.metadata_ if isinstance(memory.metadata_, dict) else {}
+            marker = "durable" if memory.content.startswith("[durable]") else None
+            candidates.append({
+                "id": memory_id,
+                "memory": memory.content,
+                "hash": vector_payloads.get(memory_id, {}).get("hash"),
+                "created_at": vector_payloads.get(memory_id, {}).get("created_at") or memory.created_at.isoformat(),
+                "updated_at": vector_payloads.get(memory_id, {}).get("updated_at") or memory.updated_at.isoformat(),
+                "score": vector_scores.get(memory_id, 0),
+                "vector_score": vector_scores.get(memory_id, 0),
+                "tier": metadata.get("tier") or marker or "unmarked",
+            })
+
+        if os.environ.get("OPENMEMORY_CUTOFF", "off").lower() == "on":
+            params = retrieval_params()
+            candidates = relative_cutoff(candidates, list(vector_scores.values()), params["k"], params["delta"])
+        candidates = candidates[:requested]
+        result_ids = {item["id"] for item in candidates}
+        key = (uid, client_name)
+        previous_ids = _last_search_ids.get(key, set())
+        dropped = 0
+        if mark_used:
+            used_ids = set()
+            for value in mark_used[:50]:
+                try:
+                    memory_id = str(uuid.UUID(value))
+                except (ValueError, AttributeError, TypeError):
+                    dropped += 1
+                    continue
+                if memory_id in previous_ids:
+                    used_ids.add(memory_id)
+                else:
+                    dropped += 1
+            try:
+                for memory_id in used_ids:
+                    db.add(MemoryAccessLog(
+                        memory_id=uuid.UUID(memory_id),
+                        app_id=app.id,
+                        access_type="used",
+                        metadata_={"query": query},
+                    ))
+                db.commit()
+            except Exception:
+                db.rollback()
+        for item in candidates:
+            db.add(MemoryAccessLog(
+                memory_id=uuid.UUID(item["id"]),
+                app_id=app.id,
+                access_type="search",
+                metadata_={"query": query, "score": item["score"], "hash": item.get("hash")},
+            ))
+        _last_search_ids[key] = result_ids
+        return candidates, dropped
+    finally:
+        db.close()
+
+
+@mcp.tool(description="Search through stored memories. Pass mark_used with ids actually used in the previous answer.")
+async def search_memory(query: str, top_k: int = 10, mark_used: list[str] | None = None) -> str:
     uid = user_id_var.get(None)
     client_name = client_name_var.get(None)
     if not uid:
@@ -172,69 +275,21 @@ async def search_memory(query: str) -> str:
         return "Error: client_name not provided"
 
     # Get memory client safely
-    memory_client = get_memory_client_safe()
-    if not memory_client:
-        return "Error: Memory system is currently unavailable. Please try again later."
-
     try:
-        db = SessionLocal()
-        try:
-            # Get or create user and app
-            user, app = get_user_and_app(db, user_id=uid, app_id=client_name)
-
-            # Get accessible memory IDs based on ACL
-            user_memories = db.query(Memory).filter(Memory.user_id == user.id).all()
-            accessible_memory_ids = [memory.id for memory in user_memories if check_memory_access_permissions(db, memory, app.id)]
-
-            filters = {
-                "user_id": uid
-            }
-
-            embeddings = memory_client.embedding_model.embed(query, "search")
-
-            hits = memory_client.vector_store.search(
-                query=query,
-                vectors=embeddings,
-                top_k=10,  # installed mem0 (2.0.4) Qdrant.search expects top_k, not limit
-                filters=filters,
-            )
-
-            allowed = set(str(mid) for mid in accessible_memory_ids) if accessible_memory_ids else None
-
-            results = []
-            for h in hits:
-                # All vector db search functions return OutputData class
-                id, score, payload = h.id, h.score, h.payload
-                if allowed and (h.id is None or h.id not in allowed):
-                    continue
-                
-                results.append({
-                    "id": id, 
-                    "memory": payload.get("data"), 
-                    "hash": payload.get("hash"),
-                    "created_at": payload.get("created_at"), 
-                    "updated_at": payload.get("updated_at"), 
-                    "score": score,
-                })
-
-            for r in results: 
-                if r.get("id"): 
-                    access_log = MemoryAccessLog(
-                        memory_id=uuid.UUID(r["id"]),
-                        app_id=app.id,
-                        access_type="search",
-                        metadata_={
-                            "query": query,
-                            "score": r.get("score"),
-                            "hash": r.get("hash"),
-                        },
-                    )
-                    db.add(access_log)
-            db.commit()
-
-            return json.dumps({"results": results}, indent=2)
-        finally:
-            db.close()
+        search_started = time.perf_counter()
+        memory_client = await run_in_threadpool(get_memory_client_safe)
+        if not memory_client:
+            return "Error: Memory system is currently unavailable. Please try again later."
+        results, dropped = await run_in_threadpool(
+            _search_memory_sync, query, top_k, mark_used or [], uid, client_name, memory_client
+        )
+        latency_ms = (time.perf_counter() - search_started) * 1000
+        log_search(query, len(results), latency_ms, max((r.get("score") for r in results), default=None), dropped)
+        public_results = [
+            {key: item.get(key) for key in ("id", "memory", "hash", "created_at", "updated_at", "score")}
+            for item in results
+        ]
+        return json.dumps({"results": public_results}, indent=2)
     except Exception as e:
         logging.exception(e)
         return f"Error searching memory: {e}"
@@ -268,7 +323,7 @@ async def list_memories() -> str:
 
             # Filter memories based on permissions
             user_memories = db.query(Memory).filter(Memory.user_id == user.id).all()
-            accessible_memory_ids = [memory.id for memory in user_memories if check_memory_access_permissions(db, memory, app.id)]
+            accessible_memory_ids = accessible_memory_id_set(db, app.id)
             if isinstance(memories, dict) and 'results' in memories:
                 for memory_data in memories['results']:
                     if 'id' in memory_data:
@@ -290,7 +345,7 @@ async def list_memories() -> str:
                 for memory in memories:
                     memory_id = uuid.UUID(memory['id'])
                     memory_obj = db.query(Memory).filter(Memory.id == memory_id).first()
-                    if memory_obj and check_memory_access_permissions(db, memory_obj, app.id):
+                    if memory_obj and memory_obj.id in accessible_memory_ids:
                         # Create access log entry
                         access_log = MemoryAccessLog(
                             memory_id=memory_id,
@@ -334,7 +389,7 @@ async def delete_memories(memory_ids: list[str]) -> str:
             # Convert string IDs to UUIDs and filter accessible ones
             requested_ids = [uuid.UUID(mid) for mid in memory_ids]
             user_memories = db.query(Memory).filter(Memory.user_id == user.id).all()
-            accessible_memory_ids = [memory.id for memory in user_memories if check_memory_access_permissions(db, memory, app.id)]
+            accessible_memory_ids = accessible_memory_id_set(db, app.id)
 
             # Only delete memories that are both requested and accessible
             ids_to_delete = [mid for mid in requested_ids if mid in accessible_memory_ids]
@@ -406,7 +461,7 @@ async def delete_all_memories() -> str:
             user, app = get_user_and_app(db, user_id=uid, app_id=client_name)
 
             user_memories = db.query(Memory).filter(Memory.user_id == user.id).all()
-            accessible_memory_ids = [memory.id for memory in user_memories if check_memory_access_permissions(db, memory, app.id)]
+            accessible_memory_ids = accessible_memory_id_set(db, app.id)
 
             # delete the accessible memories only
             for memory_id in accessible_memory_ids:

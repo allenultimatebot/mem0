@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from app.models import App, Memory, MemoryState
+from app.models import AccessControl, App, Memory, MemoryState
 from sqlalchemy.orm import Session
 
 
@@ -51,3 +51,41 @@ def check_memory_access_permissions(
 
     # Check if memory is in the accessible set
     return memory.id in accessible_memory_ids
+
+
+def accessible_memory_id_set(db: Session, app_id: Optional[UUID], owner_id: Optional[UUID] = None):
+    app = db.query(App).filter(App.id == app_id).first() if app_id else None
+    if app_id and (not app or not app.is_active):
+        return set()
+    if not app_id and owner_id is None:
+        return set()
+
+    rules = db.query(AccessControl).filter(
+        AccessControl.subject_type == "app",
+        AccessControl.subject_id == app_id,
+        AccessControl.object_type == "memory",
+    ).all()
+    allow_all = False
+    allowed = set()
+    denied = set()
+    for rule in rules:
+        if rule.effect == "allow":
+            if rule.object_id is None:
+                allow_all = True
+            else:
+                allowed.add(rule.object_id)
+        elif rule.effect == "deny":
+            if rule.object_id is None:
+                return set()
+            denied.add(rule.object_id)
+
+    query = db.query(Memory.id).filter(
+        Memory.user_id == (app.owner_id if app else owner_id),
+        Memory.state == MemoryState.active,
+    )
+    active_ids = {memory_id for (memory_id,) in query.all()}
+    if not rules:
+        return active_ids
+    if not allow_all:
+        active_ids &= allowed
+    return active_ids - denied
