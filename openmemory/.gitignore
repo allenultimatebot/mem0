@@ -14,6 +14,8 @@ api/.openmemory*
 .openmemory/
 ui/package-lock.json
 api/data/
+api/lint-report*.csv
+api/openmemory.db.pre-volume-move.stale*
 *.jsonl
 *.tsv
 lint-runs/
