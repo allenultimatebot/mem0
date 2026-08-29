@@ -31,7 +31,6 @@ up:
 
 down:
 	docker compose down -v
-	rm -f api/openmemory.db
 
 logs:
 	docker compose logs -f

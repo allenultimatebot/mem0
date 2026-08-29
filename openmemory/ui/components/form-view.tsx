@@ -371,7 +371,13 @@ export function FormView({ settings, onChange }: FormViewProps) {
                   try {
                     const res = await fetch(`${API_URL}/api/v1/backup/export`, {
                       method: "POST",
-                      headers: { "Content-Type": "application/json", Accept: "application/zip" },
+                      headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/zip",
+                        ...(process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN
+                          ? { "X-OpenMemory-Token": process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN }
+                          : {}),
+                      },
                       body: JSON.stringify({ user_id: userId }),
                     })
                     if (!res.ok) throw new Error(`Export failed with status ${res.status}`)
@@ -436,7 +442,13 @@ export function FormView({ settings, onChange }: FormViewProps) {
                       const form = new FormData()
                       form.append("file", file)
                       form.append("user_id", String(userId))
-                      const res = await fetch(`${API_URL}/api/v1/backup/import`, { method: "POST", body: form })
+                      const res = await fetch(`${API_URL}/api/v1/backup/import`, {
+                        method: "POST",
+                        headers: process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN
+                          ? { "X-OpenMemory-Token": process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN }
+                          : {},
+                        body: form,
+                      })
                       if (!res.ok) throw new Error(`Import failed with status ${res.status}`)
                       await res.json()
                       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -458,4 +470,4 @@ export function FormView({ settings, onChange }: FormViewProps) {
       </Card>
     </div>
   )
-} 
+}

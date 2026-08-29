@@ -6,7 +6,7 @@ FROM node:18-alpine AS base
 # Install dependencies for pnpm
 RUN apk add --no-cache libc6-compat curl && \
     corepack enable && \
-    corepack prepare pnpm@latest --activate
+    corepack prepare pnpm@10.5.2 --activate
 
 WORKDIR /app
 

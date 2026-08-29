@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>Label</key><string>com.ultimatesup.openmemory-health</string>
+<key>ProgramArguments</key><array><string>/bin/bash</string><string>__OPENMEMORY_SCRIPTS__/health_openmemory.sh</string></array>
+<key>WorkingDirectory</key><string>__OPENMEMORY_PROJECT__</string>
+<key>EnvironmentVariables</key><dict>
+<key>HOME</key><string>__HOME__</string><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+<key>OPENMEMORY_PROJECT_DIR</key><string>__OPENMEMORY_PROJECT__</string><key>OPENMEMORY_BACKUP_ROOT</key><string>__OPENMEMORY_BACKUPS__</string><key>OPENMEMORY_LOG_DIR</key><string>__OPENMEMORY_LOGS__</string><key>OPENMEMORY_RETENTION</key><string>verified-generations-2-local-and-protected</string>
+</dict>
+<key>RunAtLoad</key><true/><key>StartInterval</key><integer>900</integer><key>ProcessType</key><string>Background</string><key>LowPriorityIO</key><true/>
+<key>StandardOutPath</key><string>__OPENMEMORY_LOGS__/health.launchd.log</string><key>StandardErrorPath</key><string>__OPENMEMORY_LOGS__/health.launchd.log</string>
+</dict></plist>

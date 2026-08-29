@@ -1,4 +1,5 @@
 import datetime
+import os
 from uuid import uuid4
 
 from app.config import DEFAULT_APP_ID, USER_ID
@@ -9,16 +10,49 @@ from app.routers import apps_router, backup_router, config_router, memories_rout
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
+from starlette.responses import JSONResponse
+
+from app.security import configured_api_token, maintenance_lock_held, request_has_valid_token, request_is_mutating
 
 app = FastAPI(title="OpenMemory API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[
+        origin.strip()
+        for origin in os.environ.get(
+            "OPENMEMORY_CORS_ORIGINS",
+            "http://localhost:3000,http://127.0.0.1:3000",
+        ).split(",")
+        if origin.strip()
+    ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def require_api_token(request, call_next):
+    if request.url.path == "/healthz":
+        return await call_next(request)
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    if maintenance_lock_held() and request_is_mutating(request):
+        return JSONResponse({"detail": "OpenMemory maintenance in progress"}, status_code=503, headers={"Retry-After": "60"})
+    if not request_has_valid_token(request):
+        if not configured_api_token():
+            return JSONResponse(
+                {"detail": "OpenMemory API authentication is not configured"},
+                status_code=503,
+            )
+        return JSONResponse({"detail": "Authentication required"}, status_code=401)
+    return await call_next(request)
+
+
+@app.get("/healthz", include_in_schema=False)
+async def healthz():
+    return {"status": "ok"}
 
 # Create all tables
 Base.metadata.create_all(bind=engine)

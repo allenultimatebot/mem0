@@ -178,7 +178,7 @@ EOF
     # FAISS doesn't need a separate service, just volume mounts
     cat >> docker-compose.yml <<EOF
     ports:
-      - "8765:8765"
+      - "127.0.0.1:8765:8765"
     volumes:
       - openmemory_db:/usr/src/openmemory
       - ${volume_name}:/tmp/faiss
@@ -192,7 +192,7 @@ EOF
     depends_on:
       - mem0_store
     ports:
-      - "8765:8765"
+      - "127.0.0.1:8765:8765"
     volumes:
       - openmemory_db:/usr/src/openmemory
 

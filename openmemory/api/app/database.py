@@ -7,7 +7,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # load .env file (make sure you have DATABASE_URL set)
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./openmemory.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////var/lib/openmemory/openmemory.db")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set in environment")
 
@@ -16,6 +16,10 @@ engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False}  # Needed for SQLite
 )
+
+with engine.begin() as connection:
+    connection.exec_driver_sql("PRAGMA journal_mode=WAL")
+    connection.exec_driver_sql("PRAGMA busy_timeout=5000")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base class for models

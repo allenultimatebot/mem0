@@ -1,4 +1,5 @@
 *.db
+*.db-*
 .env*
 !.env.example
 !.env.dev
@@ -12,3 +13,7 @@ api/.openmemory*
 **/.next
 .openmemory/
 ui/package-lock.json
+api/data/
+*.jsonl
+*.tsv
+lint-runs/

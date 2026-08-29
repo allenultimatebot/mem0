@@ -1,0 +1,32 @@
+# Local overrides for a durable, self-hosted "global memory" deployment.
+# Docker Compose auto-merges this with docker-compose.yml.
+# - restart: unless-stopped  -> containers come back after a Colima/VM restart
+# - USER pinned              -> independent of the launching shell's $USER
+#   (compose interpolates ${USER}; pinned here so login/boot launches are stable)
+services:
+  mem0_store:
+    restart: unless-stopped
+  openmemory-mcp:
+    image: sha256:2023dca0a710124187bb10073478229684a7b982a0e3b34f1993c0d72e3ad9ca
+    restart: unless-stopped
+    environment:
+      - USER=allen_bot
+      - OPENMEMORY_API_TOKEN_FILE=/run/secrets/openmemory_api_token
+      - OPENMEMORY_CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - OPENMEMORY_BACKUP_LOCK=/usr/src/openmemory/.backup-state/.backup.lock
+      - OPENMEMORY_BACKUP_MAX_AGE_SECONDS=86400
+    volumes:
+      - ${HOME}/.config/openmemory/api-token:/run/secrets/openmemory_api_token:ro
+      - ${HOME}/.local/share/openmemory-backups:/usr/src/openmemory/.backup-state:ro
+  openmemory-ui:
+    restart: unless-stopped
+    env_file:
+      - ${HOME}/.config/openmemory/ui.env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8765
+      - NEXT_PUBLIC_USER_ID=allen_bot
+
+volumes:
+  mem0_history:
+    external: true
+    name: openmemory_mem0_history

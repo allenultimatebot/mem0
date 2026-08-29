@@ -1,0 +1,6 @@
+{
+  "upstreams": [
+    "host.docker.internal:20128",
+    "host.docker.internal:11434"
+  ]
+}
