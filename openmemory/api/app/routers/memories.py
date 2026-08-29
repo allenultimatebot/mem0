@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import UTC, datetime
 from typing import List, Optional, Set
@@ -13,6 +14,7 @@ from app.models import (
     MemoryState,
     MemoryStatusHistory,
     User,
+    categorize_memory_by_id,
 )
 from app.schemas import MemoryResponse
 from app.utils.memory import get_memory_client
@@ -22,9 +24,18 @@ from fastapi_pagination import Page, Params
 from fastapi_pagination.ext.sqlalchemy import paginate as sqlalchemy_paginate
 from pydantic import BaseModel
 from sqlalchemy import func
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, joinedload
+from starlette.concurrency import run_in_threadpool
 
 router = APIRouter(prefix="/api/v1/memories", tags=["memories"])
+_categorization_tasks = set()
+
+
+def _categorize_later(memory_id):
+    task = asyncio.create_task(run_in_threadpool(categorize_memory_by_id, memory_id))
+    _categorization_tasks.add(task)
+    task.add_done_callback(_categorization_tasks.discard)
 
 
 def get_memory_or_404(db: Session, memory_id: UUID) -> Memory:
@@ -223,21 +234,29 @@ async def create_memory(
     request: CreateMemoryRequest,
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.user_id == request.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    # Get or create app
-    app_obj = db.query(App).filter(App.name == request.app,
-                                   App.owner_id == user.id).first()
-    if not app_obj:
-        app_obj = App(name=request.app, owner_id=user.id)
-        db.add(app_obj)
-        db.commit()
-        db.refresh(app_obj)
+    try:
+        user = db.query(User).filter(User.user_id == request.user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        # Get or create app
+        app_obj = db.query(App).filter(App.name == request.app,
+                                       App.owner_id == user.id).first()
+        if not app_obj:
+            app_obj = App(name=request.app, owner_id=user.id)
+            db.add(app_obj)
+            db.commit()
+            db.refresh(app_obj)
 
-    # Check if app is active
-    if not app_obj.is_active:
-        raise HTTPException(status_code=403, detail=f"App {request.app} is currently paused on OpenMemory. Cannot create new memories.")
+        # Check if app is active
+        if not app_obj.is_active:
+            raise HTTPException(status_code=403, detail=f"App {request.app} is currently paused on OpenMemory. Cannot create new memories.")
+    except HTTPException:
+        raise
+    except OperationalError as database_error:
+        db.rollback()
+        return _write_rejected("database_unavailable", database_error)
+
+    db.rollback()
 
     # Log what we're about to do
     logging.info(f"Creating memory for user_id: {request.user_id} with app: {request.app}")
@@ -248,15 +267,12 @@ async def create_memory(
         if not memory_client:
             raise Exception("Memory client is not available")
     except Exception as client_error:
-        logging.warning(f"Memory client unavailable: {client_error}. Creating memory in database only.")
-        # Return a json response with the error
-        return {
-            "error": str(client_error)
-        }
+        return _write_rejected("client_unavailable", client_error)
 
     # Try to save to Qdrant via memory_client
     try:
-        qdrant_response = memory_client.add(
+        qdrant_response = await run_in_threadpool(
+            memory_client.add,
             request.text,
             user_id=request.user_id,  # Use string user_id to match search
             metadata={
@@ -266,10 +282,17 @@ async def create_memory(
             infer=request.infer
         )
         
-        # Log the response for debugging
-        logging.info(f"Qdrant response: {qdrant_response}")
+        if isinstance(qdrant_response, dict):
+            logging.info("Memory extraction returned %d result events", len(qdrant_response.get("results", [])))
+        else:
+            logging.warning("Memory extraction returned an unexpected response type: %s", type(qdrant_response).__name__)
         
         # Process Qdrant response
+        if not isinstance(qdrant_response, dict) or 'results' not in qdrant_response:
+            return _write_rejected("malformed_sdk_response")
+        if not qdrant_response['results']:
+            return _write_rejected("no_facts_extracted")
+
         if isinstance(qdrant_response, dict) and 'results' in qdrant_response:
             created_memories = []
             
@@ -314,16 +337,14 @@ async def create_memory(
                 db.commit()
                 for memory in created_memories:
                     db.refresh(memory)
+                    _categorize_later(memory.id)
                 
                 # Return the first memory (for API compatibility)
                 # but all memories are now saved to the database
                 return created_memories[0]
+            return _write_rejected("non_add_events")
     except Exception as qdrant_error:
-        logging.warning(f"Qdrant operation failed: {qdrant_error}.")
-        # Return a json response with the error
-        return {
-            "error": str(qdrant_error)
-        }
+        return _write_rejected(_write_failure_reason(qdrant_error), qdrant_error)
 
 
 
@@ -524,9 +545,28 @@ async def update_memory(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     memory = get_memory_or_404(db, memory_id)
+
+    try:
+        memory_client = get_memory_client()
+        if not memory_client:
+            raise RuntimeError("Memory client is not available")
+        memory_client.update(
+            str(memory_id),
+            request.memory_content,
+            metadata={
+                "source_app": "openmemory",
+                "mcp_client": memory.app.name if memory.app else "openmemory",
+            },
+        )
+    except Exception as update_error:
+        db.rollback()
+        logging.error(f"Memory vector update failed: {update_error}")
+        raise HTTPException(status_code=503, detail="Memory service unavailable") from update_error
+
     memory.content = request.memory_content
     db.commit()
     db.refresh(memory)
+    _categorize_later(memory.id)
     return memory
 
 class FilterMemoriesRequest(BaseModel):

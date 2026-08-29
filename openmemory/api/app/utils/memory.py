@@ -40,6 +40,31 @@ from mem0 import Memory
 _memory_client = None
 _config_hash = None
 
+DEFAULT_CUSTOM_INSTRUCTIONS = """Extract only facts that remain useful after this conversation.
+
+Durable facts: prefix each fact with [durable]. Extract Allen's identity, role,
+stable preferences, communication style, and long-term goals.
+Durable positive examples:
+- [durable] Allen prefers concise technical answers.
+- [durable] Allen uses Vietnamese for personal explanations.
+Durable negative examples:
+- Do not extract a one-time request for a report.
+- Do not extract a temporary task deadline.
+
+Episodic facts: prefix each fact with [episodic]. Extract project decisions,
+completed outcomes, and configuration or system facts that may help with a later
+question about the same work.
+Episodic positive examples:
+- [episodic] The staff portal deployment pins Node 20 for better-sqlite3.
+- [episodic] The August 2026 backup passed clone-restore verification.
+Episodic negative examples:
+- Do not extract assistant narration about actions it took.
+- Do not extract raw session details or transient progress.
+
+Never extract secrets, credentials, tokens, private keys, third-party personal
+facts, or one-off requests. If nothing qualifies, extract nothing. Prefix every
+extracted fact with exactly [durable] or [episodic]."""
+
 
 def _get_config_hash(config_dict):
     """Generate a hash of the config to detect changes."""
@@ -464,9 +489,8 @@ def get_memory_client(custom_instructions: str = None):
             # Continue with default configuration if database config can't be loaded
 
         # Use custom_instructions parameter first, then fall back to database value
-        instructions_to_use = custom_instructions or db_custom_instructions
-        if instructions_to_use:
-            config["custom_fact_extraction_prompt"] = instructions_to_use
+        instructions_to_use = custom_instructions or db_custom_instructions or DEFAULT_CUSTOM_INSTRUCTIONS
+        config["custom_instructions"] = instructions_to_use
 
         # Fix Ollama URLs for Docker environment (applies to both env-var defaults and DB overrides)
         if config.get("llm", {}).get("provider") == "ollama":

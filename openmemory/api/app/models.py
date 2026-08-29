@@ -17,7 +17,6 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
-    event,
 )
 from sqlalchemy.orm import Session, relationship
 
@@ -227,17 +226,13 @@ def categorize_memory(memory: Memory, db: Session) -> None:
         print(f"Error categorizing memory: {e}")
 
 
-@event.listens_for(Memory, 'after_insert')
-def after_memory_insert(mapper, connection, target):
-    """Trigger categorization after a memory is inserted."""
-    db = Session(bind=connection)
-    categorize_memory(target, db)
-    db.close()
+def categorize_memory_by_id(memory_id) -> None:
+    from app.database import SessionLocal
 
-
-@event.listens_for(Memory, 'after_update')
-def after_memory_update(mapper, connection, target):
-    """Trigger categorization after a memory is updated."""
-    db = Session(bind=connection)
-    categorize_memory(target, db)
-    db.close()
+    db = SessionLocal()
+    try:
+        memory = db.query(Memory).filter(Memory.id == memory_id).first()
+        if memory:
+            categorize_memory(memory, db)
+    finally:
+        db.close()

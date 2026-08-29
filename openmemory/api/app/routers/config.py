@@ -1,8 +1,9 @@
+from copy import deepcopy
 from typing import Any, Dict, Optional
 
 from app.database import get_db
 from app.models import Config as ConfigModel
-from app.utils.memory import reset_memory_client
+from app.utils.memory import DEFAULT_CUSTOM_INSTRUCTIONS, reset_memory_client
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -57,7 +58,7 @@ def get_default_configuration():
     # config with OpenAI defaults (which would break writes — no OpenAI key).
     return {
         "openmemory": {
-            "custom_instructions": None
+            "custom_instructions": DEFAULT_CUSTOM_INSTRUCTIONS
         },
         "mem0": {
             "llm": {
@@ -95,12 +96,14 @@ def get_config_from_db(db: Session, key: str = "main"):
         return default_config
     
     # Ensure the config has all required sections with defaults
-    config_value = config.value
+    config_value = deepcopy(config.value) if isinstance(config.value, dict) else {}
     default_config = get_default_configuration()
     
     # Merge with defaults to ensure all required fields exist
-    if "openmemory" not in config_value:
+    if not isinstance(config_value.get("openmemory"), dict):
         config_value["openmemory"] = default_config["openmemory"]
+    elif not config_value["openmemory"].get("custom_instructions"):
+        config_value["openmemory"]["custom_instructions"] = default_config["openmemory"]["custom_instructions"]
     
     if "mem0" not in config_value:
         config_value["mem0"] = default_config["mem0"]

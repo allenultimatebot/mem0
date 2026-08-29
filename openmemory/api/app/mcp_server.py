@@ -15,6 +15,7 @@ Key features:
 - Environment variable parsing for API keys
 """
 
+import asyncio
 import contextvars
 import datetime
 import json
@@ -24,7 +25,7 @@ import uuid
 import anyio
 
 from app.database import SessionLocal
-from app.models import Memory, MemoryAccessLog, MemoryState, MemoryStatusHistory
+from app.models import Memory, MemoryAccessLog, MemoryState, MemoryStatusHistory, categorize_memory_by_id
 from app.utils.db import get_user_and_app
 from app.utils.memory import get_memory_client
 from app.utils.permissions import check_memory_access_permissions
@@ -35,6 +36,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.sse import SseServerTransport
 from mcp.server.streamable_http import StreamableHTTPServerTransport
 from starlette.responses import Response
+from starlette.concurrency import run_in_threadpool
 
 # Load environment variables
 load_dotenv()
@@ -60,6 +62,13 @@ mcp_router = APIRouter(prefix="/mcp")
 
 # Initialize SSE transport
 sse = SseServerTransport("/mcp/messages/")
+_categorization_tasks = set()
+
+
+def _categorize_later(memory_id):
+    task = asyncio.create_task(run_in_threadpool(categorize_memory_by_id, memory_id))
+    _categorization_tasks.add(task)
+    task.add_done_callback(_categorization_tasks.discard)
 
 @mcp.tool(description="Add a new memory. This method is called everytime the user informs anything about themselves, their preferences, or anything that has any relevant information which can be useful in the future conversation. This can also be called when the user asks you to remember something. Set infer to False to store the memory verbatim without LLM fact extraction.")
 async def add_memories(text: str, infer: bool = True) -> str:
@@ -86,16 +95,20 @@ async def add_memories(text: str, infer: bool = True) -> str:
             if not app.is_active:
                 return f"Error: App {app.name} is currently paused on OpenMemory. Cannot create new memories."
 
-            response = memory_client.add(text,
-                                         user_id=uid,
-                                         metadata={
-                                            "source_app": "openmemory",
-                                            "mcp_client": client_name,
-                                         },
-                                         infer=infer)
+            response = await run_in_threadpool(
+                memory_client.add,
+                text,
+                user_id=uid,
+                metadata={
+                    "source_app": "openmemory",
+                    "mcp_client": client_name,
+                },
+                infer=infer,
+            )
 
             # Process the response and update database
             if isinstance(response, dict) and 'results' in response:
+                category_ids = []
                 for result in response['results']:
                     memory_id = uuid.UUID(result['id'])
                     memory = db.query(Memory).filter(Memory.id == memory_id).first()
@@ -122,6 +135,7 @@ async def add_memories(text: str, infer: bool = True) -> str:
                             new_state=MemoryState.active
                         )
                         db.add(history)
+                        category_ids.append(memory_id)
 
                     elif result['event'] == 'DELETE':
                         if memory:
@@ -137,6 +151,8 @@ async def add_memories(text: str, infer: bool = True) -> str:
                             db.add(history)
 
                 db.commit()
+                for memory_id in category_ids:
+                    _categorize_later(memory_id)
 
             return json.dumps(response)
         finally:
