@@ -17,6 +17,20 @@ TOKEN_FILE = Path(os.environ.get("OPENMEMORY_API_TOKEN_FILE", Path.home() / ".co
 COMPOSE_SERVICE = os.environ.get("OPENMEMORY_PROBE_SERVICE", "openmemory-mcp")
 PROBE_USER_ID = os.environ.get("OPENMEMORY_PROBE_USER_ID", "probe-scratch")
 COMPOSE_PROJECT = Path(__file__).resolve().parents[2]
+COMPOSE_PROJECT_NAME = os.environ.get("OPENMEMORY_PROBE_COMPOSE_PROJECT", "")
+COMPOSE_FILE = os.environ.get("OPENMEMORY_PROBE_COMPOSE_FILE", "")
+
+
+def compose_command(project_name="", compose_file=""):
+    if bool(project_name) != bool(compose_file):
+        raise ValueError("probe Compose project and file must be configured together")
+    command = ["docker", "compose"]
+    if project_name:
+        command.extend(["-p", project_name, "-f", compose_file])
+    return command
+
+
+COMPOSE_COMMAND = compose_command(COMPOSE_PROJECT_NAME, COMPOSE_FILE)
 
 L3_SCRIPT = r'''
 import json
@@ -96,12 +110,16 @@ def transcripts(paths):
     return sorted(candidates, key=lambda path: path.stat().st_mtime, reverse=True)[:3]
 
 
+def probe_user_id():
+    return os.environ.get("OPENMEMORY_PROBE_USER_ID", "probe-scratch")
+
+
 def request(text):
     try:
         token = TOKEN_FILE.read_text(encoding="utf-8").strip()
     except OSError as error:
         return 0, {"reason": "token_unavailable", "error_type": type(error).__name__}
-    body = json.dumps({"user_id": PROBE_USER_ID, "text": text, "app": "probe-write-path", "infer": True}).encode()
+    body = json.dumps({"user_id": probe_user_id(), "text": text, "app": "probe-write-path", "infer": True}).encode()
     req = urllib.request.Request(API, data=body, headers={
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
@@ -141,7 +159,7 @@ def l3_verdict(report):
 def container_l3(text):
     try:
         completed = subprocess.run(
-            ["docker", "compose", "exec", "-T", COMPOSE_SERVICE, "python", "-c", L3_SCRIPT],
+            [*COMPOSE_COMMAND, "exec", "-T", COMPOSE_SERVICE, "python", "-c", L3_SCRIPT],
             cwd=COMPOSE_PROJECT,
             input=text,
             text=True,

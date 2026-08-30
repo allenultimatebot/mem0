@@ -1,6 +1,8 @@
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 
 PROBE = Path(__file__).parents[1] / "scripts" / "probe_write_path.py"
 SPEC = importlib.util.spec_from_file_location("probe_write_path", PROBE)
@@ -28,5 +30,17 @@ def test_probe_write_paths_require_explicit_opt_in():
     assert probe.writes_allowed(True, False) is True
 
 
-def test_probe_defaults_to_scratch_user():
-    assert probe.PROBE_USER_ID == "probe-scratch"
+def test_probe_defaults_to_scratch_user(monkeypatch):
+    monkeypatch.delenv("OPENMEMORY_PROBE_USER_ID", raising=False)
+    assert probe.probe_user_id() == "probe-scratch"
+
+
+def test_probe_compose_target_requires_explicit_pair():
+    assert probe.compose_command() == ["docker", "compose"]
+    assert probe.compose_command("test-project", "test-compose.yml") == [
+        "docker", "compose", "-p", "test-project", "-f", "test-compose.yml"
+    ]
+    with pytest.raises(ValueError):
+        probe.compose_command("test-project", "")
+    with pytest.raises(ValueError):
+        probe.compose_command("", "test-compose.yml")
