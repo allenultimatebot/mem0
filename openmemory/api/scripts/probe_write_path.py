@@ -15,6 +15,7 @@ HOOK = Path.home() / ".claude/hooks/mem0-autosave.py"
 API = os.environ.get("OPENMEMORY_API_URL", "http://127.0.0.1:8765/api/v1/memories/")
 TOKEN_FILE = Path(os.environ.get("OPENMEMORY_API_TOKEN_FILE", Path.home() / ".config/openmemory/api-token"))
 COMPOSE_SERVICE = os.environ.get("OPENMEMORY_PROBE_SERVICE", "openmemory-mcp")
+PROBE_USER_ID = os.environ.get("OPENMEMORY_PROBE_USER_ID", "probe-scratch")
 COMPOSE_PROJECT = Path(__file__).resolve().parents[2]
 COMPOSE_PROJECT_NAME = os.environ.get("OPENMEMORY_PROBE_COMPOSE_PROJECT", "")
 COMPOSE_FILE = os.environ.get("OPENMEMORY_PROBE_COMPOSE_FILE", "")
