@@ -109,6 +109,10 @@ NEXT_PUBLIC_API_URL=http://localhost:8765
 NEXT_PUBLIC_USER_ID=<user-id> # Same as the user id for environment variable in api
 ```
 
+The UI sends dashboard API requests through its same-origin server proxy. For Docker Compose, provide the API token as a server-only `OPENMEMORY_API_TOKEN` environment variable. Do not use a `NEXT_PUBLIC_` token variable: public-prefixed variables are included in browser assets.
+
+The Compose service connects to the API at `http://openmemory-mcp:8765` internally. When running the UI outside Compose, set `OPENMEMORY_API_URL` to the reachable API URL and provide `OPENMEMORY_API_TOKEN` in the server process environment.
+
 ### 2. Build and Run the Project
 You can run the project using the following two commands:
 ```bash
