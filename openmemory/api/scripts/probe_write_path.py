@@ -17,6 +17,13 @@ TOKEN_FILE = Path(os.environ.get("OPENMEMORY_API_TOKEN_FILE", Path.home() / ".co
 COMPOSE_SERVICE = os.environ.get("OPENMEMORY_PROBE_SERVICE", "openmemory-mcp")
 PROBE_USER_ID = os.environ.get("OPENMEMORY_PROBE_USER_ID", "probe-scratch")
 COMPOSE_PROJECT = Path(__file__).resolve().parents[2]
+COMPOSE_PROJECT_NAME = os.environ.get("OPENMEMORY_PROBE_COMPOSE_PROJECT", "")
+COMPOSE_FILE = os.environ.get("OPENMEMORY_PROBE_COMPOSE_FILE", "")
+COMPOSE_COMMAND = ["docker", "compose"]
+if COMPOSE_PROJECT_NAME:
+    COMPOSE_COMMAND.extend(["-p", COMPOSE_PROJECT_NAME])
+if COMPOSE_FILE:
+    COMPOSE_COMMAND.extend(["-f", COMPOSE_FILE])
 
 L3_SCRIPT = r'''
 import json
@@ -141,7 +148,7 @@ def l3_verdict(report):
 def container_l3(text):
     try:
         completed = subprocess.run(
-            ["docker", "compose", "exec", "-T", COMPOSE_SERVICE, "python", "-c", L3_SCRIPT],
+            [*COMPOSE_COMMAND, "exec", "-T", COMPOSE_SERVICE, "python", "-c", L3_SCRIPT],
             cwd=COMPOSE_PROJECT,
             input=text,
             text=True,

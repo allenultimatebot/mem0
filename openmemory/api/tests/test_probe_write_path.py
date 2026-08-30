@@ -30,3 +30,7 @@ def test_probe_write_paths_require_explicit_opt_in():
 
 def test_probe_defaults_to_scratch_user():
     assert probe.PROBE_USER_ID == "probe-scratch"
+
+
+def test_probe_compose_target_is_explicitly_configurable():
+    assert probe.COMPOSE_COMMAND[:2] == ["docker", "compose"]
