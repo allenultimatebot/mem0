@@ -19,3 +19,14 @@ def test_l3_verdict_distinguishes_extraction_paths():
 def test_rest_verdict_keeps_http_and_reason_distinguishable():
     assert probe.verdict(200, {"accepted": 0, "reason": "no_facts_extracted"}) == "rejected-empty"
     assert probe.verdict(503, {"reason": "database_unavailable"}) == "error_http_503_database_unavailable"
+
+
+def test_probe_write_paths_require_explicit_opt_in():
+    assert probe.writes_allowed(False, False) is False
+    assert probe.writes_allowed(False, True) is False
+    assert probe.writes_allowed(True, True) is False
+    assert probe.writes_allowed(True, False) is True
+
+
+def test_probe_defaults_to_scratch_user():
+    assert probe.PROBE_USER_ID == "probe-scratch"

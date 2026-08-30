@@ -15,6 +15,7 @@ HOOK = Path.home() / ".claude/hooks/mem0-autosave.py"
 API = os.environ.get("OPENMEMORY_API_URL", "http://127.0.0.1:8765/api/v1/memories/")
 TOKEN_FILE = Path(os.environ.get("OPENMEMORY_API_TOKEN_FILE", Path.home() / ".config/openmemory/api-token"))
 COMPOSE_SERVICE = os.environ.get("OPENMEMORY_PROBE_SERVICE", "openmemory-mcp")
+PROBE_USER_ID = os.environ.get("OPENMEMORY_PROBE_USER_ID", "probe-scratch")
 COMPOSE_PROJECT = Path(__file__).resolve().parents[2]
 
 L3_SCRIPT = r'''
@@ -100,7 +101,7 @@ def request(text):
         token = TOKEN_FILE.read_text(encoding="utf-8").strip()
     except OSError as error:
         return 0, {"reason": "token_unavailable", "error_type": type(error).__name__}
-    body = json.dumps({"user_id": "allen_bot", "text": text, "app": "probe-write-path", "infer": True}).encode()
+    body = json.dumps({"user_id": PROBE_USER_ID, "text": text, "app": "probe-write-path", "infer": True}).encode()
     req = urllib.request.Request(API, data=body, headers={
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
@@ -190,12 +191,28 @@ def safe_body(body):
     }
 
 
+def writes_allowed(allow_write, dry_run):
+    return bool(allow_write) and not bool(dry_run)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--transcript", action="append", default=[])
     parser.add_argument("--layers", default="l1,l2,l3")
-    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--allow-write",
+        action="store_true",
+        help="Allow L2/L3 probe calls that may create scratch memory data.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Force zero-write mode. This is also the default without --allow-write.",
+    )
     args = parser.parse_args()
+    if args.allow_write and args.dry_run:
+        parser.error("--allow-write and --dry-run are mutually exclusive")
+    can_write = writes_allowed(args.allow_write, args.dry_run)
     layers = {layer.strip().lower() for layer in args.layers.split(",") if layer.strip()}
     hook = load_hook()
     paths = transcripts(args.transcript)
@@ -220,8 +237,8 @@ def main():
         for layer in ("l2", "l3"):
             if layer not in layers:
                 continue
-            if args.dry_run and layer == "l2":
-                print(f"  {layer}=skipped dry-run")
+            if not can_write:
+                print(f"  {layer}=skipped write-opt-in-required")
                 continue
             if not text:
                 print(f"  {layer}=rejected-empty no eligible turns")
