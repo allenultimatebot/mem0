@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { NextRequest } from "next/server"
 
 export const dynamic = "force-dynamic"
@@ -6,6 +7,12 @@ export const runtime = "nodejs"
 type RouteContext = {
   params: Promise<{ path: string[] }>
 }
+
+type RuntimeProcess = {
+  env?: Record<string, string | undefined>
+}
+
+const runtimeEnvironment = (globalThis as typeof globalThis & { process?: RuntimeProcess })["process"]?.["env"] || {}
 
 const blockedHeaders = new Set([
   "authorization",
@@ -34,14 +41,44 @@ function jsonResponse(body: Record<string, string>, status: number): Response {
   })
 }
 
+function configuredToken(): string {
+  const tokenFile = runtimeEnvironment["OPENMEMORY_API_TOKEN_FILE"]?.trim()
+  if (tokenFile) {
+    try {
+      const token = readFileSync(tokenFile, "utf8").trim()
+      if (token) return token
+    } catch {
+      return ""
+    }
+  }
+  return runtimeEnvironment["OPENMEMORY_API_TOKEN"]?.trim() || ""
+}
+
+function hasSameOrigin(request: NextRequest): boolean {
+  const expectedOrigin = request.nextUrl.origin
+  const origin = request.headers.get("origin")
+  if (origin) return origin === expectedOrigin
+
+  const referer = request.headers.get("referer")
+  if (!referer) return false
+  try {
+    return new URL(referer).origin === expectedOrigin
+  } catch {
+    return false
+  }
+}
+
 async function forwardRequest(request: NextRequest, context: RouteContext): Promise<Response> {
-  const token = process["env"]["OPENMEMORY_API_TOKEN"]?.trim()
+  const token = configuredToken()
   if (!token) {
     return jsonResponse({ detail: "OpenMemory API authentication is not configured" }, 503)
   }
+  if (!["GET", "HEAD", "OPTIONS"].includes(request.method) && !hasSameOrigin(request)) {
+    return jsonResponse({ detail: "Cross-origin requests are not allowed" }, 403)
+  }
 
   const { path } = await context.params
-  const apiUrl = (process["env"]["OPENMEMORY_API_URL"] || "http://localhost:8765").replace(/\/+$/, "")
+  const apiUrl = (runtimeEnvironment["OPENMEMORY_API_URL"] || "http://localhost:8765").replace(/\/+$/, "")
   const routePath = `/${path.map(encodeURIComponent).join("/")}`
   const upstreamPath = canonicalRootPaths.has(routePath) ? `${routePath}/` : routePath
   const upstreamUrl = `${apiUrl}${upstreamPath}${request.nextUrl.search}`
@@ -54,7 +91,7 @@ async function forwardRequest(request: NextRequest, context: RouteContext): Prom
   })
   headers.set("authorization", `Bearer ${token}`)
 
-  const body = request.method === "GET" || request.method === "HEAD" || request.method === "OPTIONS"
+  const body = ["GET", "HEAD", "OPTIONS"].includes(request.method)
     ? undefined
     : await request.arrayBuffer()
 
