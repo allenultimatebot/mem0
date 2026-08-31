@@ -1,0 +1,26 @@
+{
+  "issue": "ULTA-24",
+  "deploymentIdentity": "verified in the final deployed QA report and PR completion evidence",
+  "deployed": {
+    "composeProject": "ulta24-qa",
+    "identityMatch": true
+  },
+  "routeMatrix": {
+    "desktop1280x720": { "routesRendered": 4, "overflowPixels": 0, "navigationClicks": 4 },
+    "mobile390x844": { "routesRendered": 4, "overflowPixels": 0, "navigationClicks": 4 },
+    "tablet640x900": { "routesChecked": 4, "overflowPixels": 0, "navigationVisible": true },
+    "tablet768x900": { "routesChecked": 4, "overflowPixels": 0, "navigationVisible": true }
+  },
+  "keyboard": {
+    "viewport": "390x844",
+    "focusOrder": ["logo", "dashboard", "memories", "apps", "settings", "refresh", "create-memory"],
+    "singleFocusableNavigationLinks": true,
+    "linkLevelFocusVisible": true
+  },
+  "api": {
+    "sameOriginStatuses": { "stats": 200, "categories": 200, "apps": 200, "config": 200, "filter": 200 },
+    "pageErrors": 0,
+    "unexpectedServerErrors": 0
+  },
+  "unrelated": ["favicon 404", "direct unauthenticated API 401"]
+}

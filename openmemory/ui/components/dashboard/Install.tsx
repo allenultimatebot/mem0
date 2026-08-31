@@ -96,12 +96,13 @@ export const Install = () => {
       </div>
 
       <Tabs defaultValue="claude" className="w-full">
-        <TabsList className="bg-transparent border-b border-zinc-800 rounded-none w-full justify-start gap-0 p-0 grid grid-cols-9">
+        <TabsList className="grid h-auto min-h-10 w-full grid-cols-3 gap-0 rounded-none border-b border-zinc-800 bg-transparent p-0 sm:grid-cols-4 lg:h-10 lg:grid-cols-9">
           {allTabs.map(({ key, label, icon }) => (
             <TabsTrigger
               key={key}
               value={key}
-              className={`flex-1 px-0 pb-2 rounded-none ${getColorGradient(
+              aria-label={label}
+              className={`min-w-0 flex-1 overflow-hidden px-0 pb-2 rounded-none ${getColorGradient(
                 key
               )} data-[state=active]:border-b-2 data-[state=active]:shadow-none text-zinc-400 data-[state=active]:text-white flex items-center justify-center gap-2 text-sm`}
             >
@@ -116,7 +117,7 @@ export const Install = () => {
                   <span className="relative top-1">{icon}</span>
                 </div>
               )}
-              <span>{label}</span>
+              <span className="hidden truncate lg:inline">{label}</span>
             </TabsTrigger>
           ))}
         </TabsList>
