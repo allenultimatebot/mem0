@@ -101,6 +101,7 @@ export const Install = () => {
             <TabsTrigger
               key={key}
               value={key}
+              aria-label={label}
               className={`min-w-0 flex-1 overflow-hidden px-0 pb-2 rounded-none ${getColorGradient(
                 key
               )} data-[state=active]:border-b-2 data-[state=active]:shadow-none text-zinc-400 data-[state=active]:text-white flex items-center justify-center gap-2 text-sm`}
@@ -116,7 +117,7 @@ export const Install = () => {
                   <span className="relative top-1">{icon}</span>
                 </div>
               )}
-              <span className="truncate">{label}</span>
+              <span className="hidden truncate lg:inline">{label}</span>
             </TabsTrigger>
           ))}
         </TabsList>
