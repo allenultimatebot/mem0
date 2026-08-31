@@ -46,7 +46,7 @@ export function AppCard({ app }: AppCardProps) {
         </div>
       </CardHeader>
       <CardContent className="pb-4 my-1">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <p className="text-zinc-400 text-sm mb-1">Memories Created</p>
             <p className="text-xl font-medium">
@@ -61,7 +61,7 @@ export function AppCard({ app }: AppCardProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="border-t border-zinc-800 p-0 px-6 py-2 flex justify-between items-center">
+      <CardFooter className="flex flex-wrap items-center justify-between gap-2 border-t border-zinc-800 p-0 px-6 py-2">
         <div
           className={`${
             isActive
