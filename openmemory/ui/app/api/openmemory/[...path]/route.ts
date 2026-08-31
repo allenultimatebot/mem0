@@ -55,7 +55,10 @@ function configuredToken(): string {
 }
 
 function hasSameOrigin(request: NextRequest): boolean {
-  const expectedOrigin = request.nextUrl.origin
+  const host = request.headers.get("host")
+  if (!host) return false
+  const protocol = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "")
+  const expectedOrigin = `${protocol}://${host}`
   const origin = request.headers.get("origin")
   if (origin) return origin === expectedOrigin
 
