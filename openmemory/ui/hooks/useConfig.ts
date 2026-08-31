@@ -15,6 +15,7 @@ import {
   Mem0Config,
   OpenMemoryConfig
 } from '@/store/configSlice';
+import { openMemoryApiUrl } from '@/lib/api';
 
 interface UseConfigApiReturn {
   fetchConfig: () => Promise<void>;
@@ -37,7 +38,7 @@ export const useConfig = (): UseConfigApiReturn => {
     dispatch(setConfigLoading());
     
     try {
-      const response = await axios.get(`${URL}/api/v1/config`);
+      const response = await axios.get(openMemoryApiUrl("api/v1/config/"));
       dispatch(setConfigSuccess(response.data));
       setIsLoading(false);
     } catch (err: any) {
@@ -54,7 +55,7 @@ export const useConfig = (): UseConfigApiReturn => {
     setError(null);
     
     try {
-      const response = await axios.put(`${URL}/api/v1/config`, config);
+      const response = await axios.put(openMemoryApiUrl("api/v1/config/"), config);
       dispatch(setConfigSuccess(response.data));
       setIsLoading(false);
       return response.data;
@@ -72,7 +73,7 @@ export const useConfig = (): UseConfigApiReturn => {
     setError(null);
     
     try {
-      const response = await axios.post(`${URL}/api/v1/config/reset`);
+      const response = await axios.post(openMemoryApiUrl("api/v1/config/reset"));
       dispatch(setConfigSuccess(response.data));
       setIsLoading(false);
       return response.data;
@@ -90,7 +91,7 @@ export const useConfig = (): UseConfigApiReturn => {
     setError(null);
     
     try {
-      const response = await axios.put(`${URL}/api/v1/config/mem0/llm`, llmConfig);
+      const response = await axios.put(openMemoryApiUrl("api/v1/config/mem0/llm"), llmConfig);
       dispatch(updateLLM(response.data));
       setIsLoading(false);
       return response.data;
@@ -107,7 +108,7 @@ export const useConfig = (): UseConfigApiReturn => {
     setError(null);
     
     try {
-      const response = await axios.put(`${URL}/api/v1/config/mem0/embedder`, embedderConfig);
+      const response = await axios.put(openMemoryApiUrl("api/v1/config/mem0/embedder"), embedderConfig);
       dispatch(updateEmbedder(response.data));
       setIsLoading(false);
       return response.data;
@@ -128,4 +129,4 @@ export const useConfig = (): UseConfigApiReturn => {
     isLoading,
     error
   };
-}; 
+};

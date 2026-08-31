@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -223,6 +224,9 @@ export default function FilterComponent() {
             <DialogTitle className="text-zinc-100 flex justify-between items-center">
               <span>Filters</span>
             </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              Filter memories by app, category, or archive status.
+            </DialogDescription>
           </DialogHeader>
           <Tabs defaultValue="apps" className="w-full">
             <TabsList className="grid grid-cols-3 bg-zinc-800">

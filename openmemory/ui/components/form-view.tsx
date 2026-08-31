@@ -13,6 +13,7 @@ import { Textarea } from "./ui/textarea"
 import { useRef, useState as useReactState } from "react"
 import { useSelector } from "react-redux"
 import { RootState } from "@/store/store"
+import { openMemoryApiUrl } from "@/lib/api"
 
 interface FormViewProps {
   settings: any
@@ -26,7 +27,6 @@ export function FormView({ settings, onChange }: FormViewProps) {
   const [isUploading, setIsUploading] = useReactState(false)
   const [selectedImportFileName, setSelectedImportFileName] = useReactState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8765"
   const userId = useSelector((state: RootState) => state.profile.userId)
 
   const handleOpenMemoryChange = (key: string, value: any) => {
@@ -104,7 +104,7 @@ export function FormView({ settings, onChange }: FormViewProps) {
 
   const LLM_PROVIDERS = {
     "OpenAI": "openai",
-    "Anthropic": "anthropic", 
+    "Anthropic": "anthropic",
     "Azure OpenAI": "azure_openai",
     "Ollama": "ollama",
     "Together": "together",
@@ -122,7 +122,7 @@ export function FormView({ settings, onChange }: FormViewProps) {
 
   const EMBEDDER_PROVIDERS = {
     "OpenAI": "openai",
-    "Azure OpenAI": "azure_openai", 
+    "Azure OpenAI": "azure_openai",
     "Ollama": "ollama",
     "Hugging Face": "huggingface",
     "Vertex AI": "vertexai",
@@ -134,14 +134,13 @@ export function FormView({ settings, onChange }: FormViewProps) {
   }
 
   return (
-    <div className="space-y-8">
-      {/* OpenMemory Settings */}
-      <Card>
-        <CardHeader>
+    <div className="min-w-0 space-y-8">
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>OpenMemory Settings</CardTitle>
           <CardDescription>Configure your OpenMemory instance settings</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="min-w-0 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="custom-instructions">Custom Instructions</Label>
             <Textarea
@@ -149,7 +148,7 @@ export function FormView({ settings, onChange }: FormViewProps) {
               placeholder="Enter custom instructions for memory management..."
               value={settings.openmemory?.custom_instructions || ""}
               onChange={(e) => handleOpenMemoryChange("custom_instructions", e.target.value)}
-              className="min-h-[100px]"
+              className="min-w-0 min-h-[100px]"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Custom instructions that will be used to guide memory processing and fact extraction.
@@ -158,27 +157,21 @@ export function FormView({ settings, onChange }: FormViewProps) {
         </CardContent>
       </Card>
 
-      {/* LLM Settings */}
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>LLM Settings</CardTitle>
           <CardDescription>Configure your Large Language Model provider and settings</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="min-w-0 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="llm-provider">LLM Provider</Label>
-            <Select 
-              value={settings.mem0?.llm?.provider || ""}
-              onValueChange={handleLlmProviderChange}
-            >
+            <Select value={settings.mem0?.llm?.provider || ""} onValueChange={handleLlmProviderChange}>
               <SelectTrigger id="llm-provider">
                 <SelectValue placeholder="Select a provider" />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(LLM_PROVIDERS).map(([provider, value]) => (
-                  <SelectItem key={value} value={value}>
-                    {provider}
-                  </SelectItem>
+                  <SelectItem key={value} value={value}>{provider}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -203,9 +196,7 @@ export function FormView({ settings, onChange }: FormViewProps) {
                 value={settings.mem0?.llm?.config?.ollama_base_url || ""}
                 onChange={(e) => handleLlmConfigChange("ollama_base_url", e.target.value)}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Leave empty to use default: http://host.docker.internal:11434
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Leave empty to use default: http://host.docker.internal:11434</p>
             </div>
           )}
 
@@ -220,19 +211,17 @@ export function FormView({ settings, onChange }: FormViewProps) {
                   value={settings.mem0?.llm?.config?.api_key || ""}
                   onChange={(e) => handleLlmConfigChange("api_key", e.target.value)}
                 />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  type="button" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 h-7 w-7"
                   onClick={() => setShowLlmApiKey(!showLlmApiKey)}
                 >
                   {showLlmApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Use "env:API_KEY" to load from environment variable, or enter directly
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Use "env:API_KEY" to load from environment variable, or enter directly</p>
             </div>
           )}
 
@@ -272,27 +261,21 @@ export function FormView({ settings, onChange }: FormViewProps) {
         </CardContent>
       </Card>
 
-      {/* Embedder Settings */}
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>Embedder Settings</CardTitle>
           <CardDescription>Configure your Embedding Model provider and settings</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="min-w-0 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="embedder-provider">Embedder Provider</Label>
-            <Select 
-              value={settings.mem0?.embedder?.provider || ""} 
-              onValueChange={handleEmbedderProviderChange}
-            >
+            <Select value={settings.mem0?.embedder?.provider || ""} onValueChange={handleEmbedderProviderChange}>
               <SelectTrigger id="embedder-provider">
                 <SelectValue placeholder="Select a provider" />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(EMBEDDER_PROVIDERS).map(([provider, value]) => (
-                  <SelectItem key={value} value={value}>
-                    {provider}
-                  </SelectItem>
+                  <SelectItem key={value} value={value}>{provider}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -317,9 +300,7 @@ export function FormView({ settings, onChange }: FormViewProps) {
                 value={settings.mem0?.embedder?.config?.ollama_base_url || ""}
                 onChange={(e) => handleEmbedderConfigChange("ollama_base_url", e.target.value)}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Leave empty to use default: http://host.docker.internal:11434
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Leave empty to use default: http://host.docker.internal:11434</p>
             </div>
           )}
 
@@ -334,32 +315,28 @@ export function FormView({ settings, onChange }: FormViewProps) {
                   value={settings.mem0?.embedder?.config?.api_key || ""}
                   onChange={(e) => handleEmbedderConfigChange("api_key", e.target.value)}
                 />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  type="button" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 h-7 w-7"
                   onClick={() => setShowEmbedderApiKey(!showEmbedderApiKey)}
                 >
                   {showEmbedderApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Use "env:API_KEY" to load from environment variable, or enter directly
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Use "env:API_KEY" to load from environment variable, or enter directly</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Backup (Export / Import) */}
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>Backup</CardTitle>
           <CardDescription>Export or import your memories</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Export Section */}
+        <CardContent className="min-w-0 space-y-6">
           <div className="p-4 border border-zinc-800 rounded-lg space-y-2">
             <div className="text-sm font-medium">Export</div>
             <p className="text-xs text-muted-foreground">Download a ZIP containing your memories.</p>
@@ -369,29 +346,26 @@ export function FormView({ settings, onChange }: FormViewProps) {
                 className="bg-zinc-800 hover:bg-zinc-700"
                 onClick={async () => {
                   try {
-                    const res = await fetch(`${API_URL}/api/v1/backup/export`, {
+                    const response = await fetch(openMemoryApiUrl("api/v1/backup/export"), {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
                         Accept: "application/zip",
-                        ...(process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN
-                          ? { "X-OpenMemory-Token": process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN }
-                          : {}),
                       },
                       body: JSON.stringify({ user_id: userId }),
                     })
-                    if (!res.ok) throw new Error(`Export failed with status ${res.status}`)
-                    const blob = await res.blob()
+                    if (!response.ok) throw new Error(`Export failed with status ${response.status}`)
+                    const blob = await response.blob()
                     const url = window.URL.createObjectURL(blob)
-                    const a = document.createElement("a")
-                    a.href = url
-                    a.download = `memories_export.zip`
-                    document.body.appendChild(a)
-                    a.click()
-                    a.remove()
+                    const link = document.createElement("a")
+                    link.href = url
+                    link.download = "memories_export.zip"
+                    document.body.appendChild(link)
+                    link.click()
+                    link.remove()
                     window.URL.revokeObjectURL(url)
-                  } catch (e) {
-                    console.error(e)
+                  } catch (error) {
+                    console.error(error)
                     alert("Export failed. Check console for details.")
                   }
                 }}
@@ -401,7 +375,6 @@ export function FormView({ settings, onChange }: FormViewProps) {
             </div>
           </div>
 
-          {/* Import Section */}
           <div className="p-4 border border-zinc-800 rounded-lg space-y-2">
             <div className="text-sm font-medium">Import</div>
             <p className="text-xs text-muted-foreground">Upload a ZIP exported by OpenMemory. Default settings will be used.</p>
@@ -411,18 +384,16 @@ export function FormView({ settings, onChange }: FormViewProps) {
                 type="file"
                 accept=".zip"
                 className="hidden"
-                onChange={(evt) => {
-                  const f = evt.target.files?.[0]
-                  if (!f) return
-                  setSelectedImportFileName(f.name)
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (!file) return
+                  setSelectedImportFileName(file.name)
                 }}
               />
               <Button
                 type="button"
                 className="bg-zinc-800 hover:bg-zinc-700"
-                onClick={() => {
-                  if (fileInputRef.current) fileInputRef.current.click()
-                }}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="h-4 w-4 mr-2" /> Choose ZIP
               </Button>
@@ -442,19 +413,16 @@ export function FormView({ settings, onChange }: FormViewProps) {
                       const form = new FormData()
                       form.append("file", file)
                       form.append("user_id", String(userId))
-                      const res = await fetch(`${API_URL}/api/v1/backup/import`, {
+                      const response = await fetch(openMemoryApiUrl("api/v1/backup/import"), {
                         method: "POST",
-                        headers: process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN
-                          ? { "X-OpenMemory-Token": process.env.NEXT_PUBLIC_OPENMEMORY_API_TOKEN }
-                          : {},
                         body: form,
                       })
-                      if (!res.ok) throw new Error(`Import failed with status ${res.status}`)
-                      await res.json()
+                      if (!response.ok) throw new Error(`Import failed with status ${response.status}`)
+                      await response.json()
                       if (fileInputRef.current) fileInputRef.current.value = ""
                       setSelectedImportFileName("")
-                    } catch (e) {
-                      console.error(e)
+                    } catch (error) {
+                      console.error(error)
                       alert("Import failed. Check console for details.")
                     } finally {
                       setIsUploading(false)

@@ -20,11 +20,15 @@ services:
       - ${HOME}/.local/share/openmemory-backups:/usr/src/openmemory/.backup-state:ro
   openmemory-ui:
     restart: unless-stopped
+    volumes:
+      - ${HOME}/.config/openmemory/api-token:/run/secrets/openmemory_api_token:ro
     env_file:
       - ${HOME}/.config/openmemory/ui.env
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8765
       - NEXT_PUBLIC_USER_ID=allen_bot
+      - OPENMEMORY_API_URL=http://openmemory-mcp:8765
+      - OPENMEMORY_API_TOKEN_FILE=/run/secrets/openmemory_api_token
 
 volumes:
   mem0_history:

@@ -20,6 +20,7 @@ import {
   setAccessedMemoriesError,
   setSelectedAppError,
 } from '@/store/appsSlice';
+import { openMemoryApiUrl } from '@/lib/api';
 
 interface ApiResponse {
   total: number;
@@ -93,7 +94,7 @@ export const useAppsApi = (): UseAppsApiReturn => {
       if (sort_direction) queryParams.append('sort_direction', sort_direction);
 
       const response = await axios.get<ApiResponse>(
-        `${URL}/api/v1/apps/?${queryParams.toString()}`
+        openMemoryApiUrl(`api/v1/apps/?${queryParams.toString()}`)
       );
 
       setIsLoading(false);
@@ -116,7 +117,7 @@ export const useAppsApi = (): UseAppsApiReturn => {
     dispatch(setSelectedAppLoading());
     try {
       const response = await axios.get<AppDetails>(
-        `${URL}/api/v1/apps/${appId}`
+        openMemoryApiUrl(`api/v1/apps/${appId}`)
       );
       dispatch(setSelectedAppDetails(response.data));
       setIsLoading(false);
@@ -134,7 +135,7 @@ export const useAppsApi = (): UseAppsApiReturn => {
     dispatch(setCreatedMemoriesLoading());
     try {
       const response = await axios.get<MemoriesResponse>(
-        `${URL}/api/v1/apps/${appId}/memories?page=${page}&page_size=${pageSize}`
+        openMemoryApiUrl(`api/v1/apps/${appId}/memories?page=${page}&page_size=${pageSize}`)
       );
       dispatch(setCreatedMemoriesSuccess({
         items: response.data.memories,
@@ -155,7 +156,7 @@ export const useAppsApi = (): UseAppsApiReturn => {
     dispatch(setAccessedMemoriesLoading());
     try {
       const response = await axios.get<AccessedMemoriesResponse>(
-        `${URL}/api/v1/apps/${appId}/accessed?page=${page}&page_size=${pageSize}`
+        openMemoryApiUrl(`api/v1/apps/${appId}/accessed?page=${page}&page_size=${pageSize}`)
       );
       dispatch(setAccessedMemoriesSuccess({
         items: response.data.memories,
@@ -175,7 +176,7 @@ export const useAppsApi = (): UseAppsApiReturn => {
     setIsLoading(true);
     try {
       const response = await axios.put(
-        `${URL}/api/v1/apps/${appId}?is_active=${details.is_active}`
+        openMemoryApiUrl(`api/v1/apps/${appId}?is_active=${details.is_active}`)
       );
       setIsLoading(false);
       return response.data;

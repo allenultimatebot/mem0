@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
+import { openMemoryApiUrl } from '@/lib/api';
 import {
   Category,
   setCategoriesLoading,
@@ -39,7 +40,7 @@ export const useFiltersApi = (): UseFiltersApiReturn => {
     dispatch(setCategoriesLoading());
     try {
       const response = await axios.get<CategoriesResponse>(
-        `${URL}/api/v1/memories/categories?user_id=${user_id}`
+        openMemoryApiUrl(`api/v1/memories/categories?user_id=${user_id}`)
       );
 
       dispatch(setCategoriesSuccess({
@@ -76,4 +77,4 @@ export const useFiltersApi = (): UseFiltersApiReturn => {
     updateCategories,
     updateSort
   };
-}; 
+};

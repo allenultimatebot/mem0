@@ -98,17 +98,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="text-white py-6">
-      <div className="container mx-auto py-10 max-w-4xl">
-        <div className="flex justify-between items-center mb-8">
-          <div className="animate-fade-slide-down">
+    <div className="min-w-0 py-6 text-white">
+      <div className="container mx-auto min-w-0 max-w-4xl py-10">
+        <div className="mb-8 flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 animate-fade-slide-down">
             <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
             <p className="text-muted-foreground mt-1">Manage your OpenMemory and Mem0 configuration</p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" className="border-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-zinc-50 animate-fade-slide-down" disabled={isLoading}>
+                <Button variant="outline" className="flex-1 border-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-zinc-50 animate-fade-slide-down sm:flex-none" disabled={isLoading}>
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Reset Defaults
                 </Button>
@@ -130,14 +130,14 @@ export default function SettingsPage() {
               </AlertDialogContent>
             </AlertDialog>
             
-            <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 animate-fade-slide-down" disabled={isLoading}>
+            <Button onClick={handleSave} className="flex-1 bg-primary hover:bg-primary/90 animate-fade-slide-down sm:flex-none" disabled={isLoading}>
               <SaveIcon className="mr-2 h-4 w-4" />
               {isLoading ? "Saving..." : "Save Configuration"}
             </Button>
           </div>
         </div>
 
-        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "form" | "json")} className="w-full animate-fade-slide-down delay-1">
+        <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "form" | "json")} className="min-w-0 w-full animate-fade-slide-down delay-1">
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="form">Form View</TabsTrigger>
             <TabsTrigger value="json">JSON Editor</TabsTrigger>

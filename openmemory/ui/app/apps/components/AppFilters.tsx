@@ -79,8 +79,8 @@ export function AppFilters() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative flex-1">
+    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+      <div className="relative min-w-0 flex-1">
         <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
         <Input
           placeholder="Search Apps..."
@@ -94,7 +94,7 @@ export function AppFilters() {
         value={String(filters.isActive)}
         onValueChange={handleActiveFilterChange}
       >
-        <SelectTrigger className="w-[130px] border-zinc-700/50 bg-zinc-900 hover:bg-zinc-800">
+        <SelectTrigger className="w-full border-zinc-700/50 bg-zinc-900 hover:bg-zinc-800 sm:w-[130px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent className="border-zinc-700/50 bg-zinc-900 hover:bg-zinc-800">
@@ -108,7 +108,7 @@ export function AppFilters() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="h-9 px-4 border-zinc-700 bg-zinc-900 hover:bg-zinc-800"
+            className="h-9 w-full border-zinc-700 bg-zinc-900 px-4 hover:bg-zinc-800 sm:w-auto"
           >
             {filters.sortDirection === "asc" ? (
               <SortDesc className="h-4 w-4 mr-2" />

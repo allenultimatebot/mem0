@@ -11,6 +11,7 @@ services:
     environment:
       - USER
       - API_KEY
+      - OPENMEMORY_API_TOKEN
       - DATABASE_URL=sqlite:////var/lib/openmemory/openmemory.db
     env_file:
       - api/.env
@@ -39,6 +40,8 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8765}
       - NEXT_PUBLIC_USER_ID=${USER:-user}
+      - OPENMEMORY_API_URL=http://openmemory-mcp:8765
+      - OPENMEMORY_API_TOKEN
 
 volumes:
   openmemory_db:
