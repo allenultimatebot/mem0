@@ -134,13 +134,13 @@ export function FormView({ settings, onChange }: FormViewProps) {
   }
 
   return (
-    <div className="space-y-8">
-      <Card>
-        <CardHeader>
+    <div className="min-w-0 space-y-8">
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>OpenMemory Settings</CardTitle>
           <CardDescription>Configure your OpenMemory instance settings</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="min-w-0 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="custom-instructions">Custom Instructions</Label>
             <Textarea
@@ -148,7 +148,7 @@ export function FormView({ settings, onChange }: FormViewProps) {
               placeholder="Enter custom instructions for memory management..."
               value={settings.openmemory?.custom_instructions || ""}
               onChange={(e) => handleOpenMemoryChange("custom_instructions", e.target.value)}
-              className="min-h-[100px]"
+              className="min-w-0 min-h-[100px]"
             />
             <p className="text-xs text-muted-foreground mt-1">
               Custom instructions that will be used to guide memory processing and fact extraction.
@@ -157,12 +157,12 @@ export function FormView({ settings, onChange }: FormViewProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>LLM Settings</CardTitle>
           <CardDescription>Configure your Large Language Model provider and settings</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="min-w-0 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="llm-provider">LLM Provider</Label>
             <Select value={settings.mem0?.llm?.provider || ""} onValueChange={handleLlmProviderChange}>
@@ -261,12 +261,12 @@ export function FormView({ settings, onChange }: FormViewProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>Embedder Settings</CardTitle>
           <CardDescription>Configure your Embedding Model provider and settings</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="min-w-0 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="embedder-provider">Embedder Provider</Label>
             <Select value={settings.mem0?.embedder?.provider || ""} onValueChange={handleEmbedderProviderChange}>
@@ -331,12 +331,12 @@ export function FormView({ settings, onChange }: FormViewProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="min-w-0">
+        <CardHeader className="min-w-0">
           <CardTitle>Backup</CardTitle>
           <CardDescription>Export or import your memories</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="min-w-0 space-y-6">
           <div className="p-4 border border-zinc-800 rounded-lg space-y-2">
             <div className="text-sm font-medium">Export</div>
             <p className="text-xs text-muted-foreground">Download a ZIP containing your memories.</p>

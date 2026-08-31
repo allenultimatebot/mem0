@@ -1,10 +1,10 @@
 {
   "issue": "ULTA-24",
-  "sourceCommit": "bee2198da7523fd49015f0f15c27b1f10dd703b7",
+  "sourceCommit": "1bbe72adfcae1ef5b7d349acad0c4693e89764b5",
   "deployed": {
     "composeProject": "ulta24-qa",
-    "imageId": "sha256:7be1b40a3150978610064f121497682c7c420ba2d7a9b3c7acf85158cb933e14",
-    "ociRevision": "bee2198da7523fd49015f0f15c27b1f10dd703b7",
+    "imageId": "sha256:9ad866bce94c2468ebb60a6a86ea4a2c65212ddcc4b35ba436da34e04be94d97",
+    "ociRevision": "1bbe72adfcae1ef5b7d349acad0c4693e89764b5",
     "identityMatch": true
   },
   "routeMatrix": {

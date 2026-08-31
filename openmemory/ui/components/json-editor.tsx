@@ -53,9 +53,9 @@ export function JsonEditor({ value, onChange }: JsonEditorProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <div className="relative">
-        <Textarea value={jsonString} onChange={handleTextChange} className="font-mono h-[600px] resize-none" />
+        <Textarea value={jsonString} onChange={handleTextChange} className="h-[600px] min-w-0 resize-none font-mono" />
         <div className="absolute top-3 right-3">
           {isValid ? (
             <CheckCircle2 className="h-5 w-5 text-green-500" />

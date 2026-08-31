@@ -99,7 +99,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-w-0 py-6 text-white">
-      <div className="container mx-auto max-w-4xl py-10">
+      <div className="container mx-auto min-w-0 max-w-4xl py-10">
         <div className="mb-8 flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 animate-fade-slide-down">
             <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
