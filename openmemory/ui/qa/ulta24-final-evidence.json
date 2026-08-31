@@ -1,10 +1,8 @@
 {
   "issue": "ULTA-24",
-  "sourceCommit": "90518d5069f86a333740684749ea87ea8a94f85a",
+  "deploymentIdentity": "verified in the final deployed QA report and PR completion evidence",
   "deployed": {
     "composeProject": "ulta24-qa",
-    "imageId": "sha256:18fe1afd407f5ecf6cba97d8b8ec756f7ac0e57b5e5386bf2398904f1c30c9c4",
-    "ociRevision": "90518d5069f86a333740684749ea87ea8a94f85a",
     "identityMatch": true
   },
   "routeMatrix": {
