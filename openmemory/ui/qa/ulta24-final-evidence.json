@@ -15,7 +15,7 @@
   },
   "keyboard": {
     "viewport": "390x844",
-    "focusOrder": ["logo", "refresh", "create-memory", "dashboard", "memories", "apps", "settings"],
+    "focusOrder": ["logo", "dashboard", "memories", "apps", "settings", "refresh", "create-memory"],
     "singleFocusableNavigationLinks": true,
     "linkLevelFocusVisible": true
   },
