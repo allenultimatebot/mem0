@@ -45,7 +45,7 @@ export function CreateMemoryDialog() {
           size="sm"
           aria-label="Create Memory"
           title="Create Memory"
-          className="bg-primary px-2 text-white hover:bg-primary/90 sm:px-3"
+          className="bg-primary px-2 text-white hover:bg-primary/90 lg:px-3"
         >
           <GoPlus />
           <span className="hidden sm:inline">Create Memory</span>
