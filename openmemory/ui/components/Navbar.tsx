@@ -112,60 +112,64 @@ export function Navbar() {
           <CreateMemoryDialog />
         </div>
         <nav aria-label="Primary navigation" className="order-2 flex w-full items-center justify-between gap-1 lg:w-auto lg:gap-2">
-          <Link href="/" className="flex-1 lg:flex-none">
+          <Link href="/" aria-label="Dashboard" title="Dashboard" className="flex-1 lg:flex-none">
             <Button
+              asChild
               variant="outline"
               size="sm"
-              aria-label="Dashboard"
-              title="Dashboard"
               className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
                 isActive("/") ? activeClass : inactiveClass
               }`}
             >
-              <HiHome />
-              <span className="hidden lg:inline">Dashboard</span>
+              <span>
+                <HiHome />
+                <span className="hidden lg:inline">Dashboard</span>
+              </span>
             </Button>
           </Link>
-          <Link href="/memories" className="flex-1 lg:flex-none">
+          <Link href="/memories" aria-label="Memories" title="Memories" className="flex-1 lg:flex-none">
             <Button
+              asChild
               variant="outline"
               size="sm"
-              aria-label="Memories"
-              title="Memories"
               className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
                 isActive("/memories") ? activeClass : inactiveClass
               }`}
             >
-              <HiMiniRectangleStack />
-              <span className="hidden lg:inline">Memories</span>
+              <span>
+                <HiMiniRectangleStack />
+                <span className="hidden lg:inline">Memories</span>
+              </span>
             </Button>
           </Link>
-          <Link href="/apps" className="flex-1 lg:flex-none">
+          <Link href="/apps" aria-label="Apps" title="Apps" className="flex-1 lg:flex-none">
             <Button
+              asChild
               variant="outline"
               size="sm"
-              aria-label="Apps"
-              title="Apps"
               className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
                 isActive("/apps") ? activeClass : inactiveClass
               }`}
             >
-              <RiApps2AddFill />
-              <span className="hidden lg:inline">Apps</span>
+              <span>
+                <RiApps2AddFill />
+                <span className="hidden lg:inline">Apps</span>
+              </span>
             </Button>
           </Link>
-          <Link href="/settings" className="flex-1 lg:flex-none">
+          <Link href="/settings" aria-label="Settings" title="Settings" className="flex-1 lg:flex-none">
             <Button
+              asChild
               variant="outline"
               size="sm"
-              aria-label="Settings"
-              title="Settings"
               className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
                 isActive("/settings") ? activeClass : inactiveClass
               }`}
             >
-              <Settings />
-              <span className="hidden lg:inline">Settings</span>
+              <span>
+                <Settings />
+                <span className="hidden lg:inline">Settings</span>
+              </span>
             </Button>
           </Link>
         </nav>
