@@ -4,7 +4,7 @@
 FROM node:18-alpine AS base
 
 # Install dependencies for pnpm
-RUN apk add --no-cache libc6-compat curl && \
+RUN apk add --no-cache libc6-compat curl su-exec && \
     corepack enable && \
     corepack prepare pnpm@10.5.2 --activate
 
@@ -42,7 +42,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --chown=nextjs:nodejs entrypoint.sh /home/nextjs/entrypoint.sh
 RUN chmod +x /home/nextjs/entrypoint.sh
 
-USER nextjs
+USER root
 
 EXPOSE 3000
 ENV PORT=3000
