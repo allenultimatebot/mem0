@@ -43,10 +43,12 @@ export function CreateMemoryDialog() {
         <Button
           variant="outline"
           size="sm"
-          className="bg-primary hover:bg-primary/90 text-white"
+          aria-label="Create Memory"
+          title="Create Memory"
+          className="bg-primary px-2 text-white hover:bg-primary/90 sm:px-3"
         >
           <GoPlus />
-          Create Memory
+          <span className="hidden sm:inline">Create Memory</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[525px] bg-zinc-900 border-zinc-800">

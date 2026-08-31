@@ -92,70 +92,80 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-zinc-950/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-950/60">
-      <div className="container flex h-14 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
+      <div className="container flex min-w-0 flex-wrap items-center justify-between gap-y-2 py-2 sm:h-14 sm:flex-nowrap sm:py-0">
+        <Link href="/" className="flex min-w-0 items-center gap-2">
           <Image src="/logo.svg" alt="OpenMemory" width={26} height={26} />
-          <span className="text-xl font-medium">OpenMemory</span>
+          <span className="truncate text-xl font-medium">OpenMemory</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <Link href="/">
+        <nav aria-label="Primary navigation" className="order-3 flex w-full items-center justify-between gap-1 sm:order-none sm:w-auto sm:gap-2">
+          <Link href="/" className="flex-1 sm:flex-none">
             <Button
               variant="outline"
               size="sm"
-              className={`flex items-center gap-2 border-none ${
+              aria-label="Dashboard"
+              title="Dashboard"
+              className={`flex w-full items-center justify-center gap-2 border-none px-2 sm:w-auto sm:px-3 ${
                 isActive("/") ? activeClass : inactiveClass
               }`}
             >
               <HiHome />
-              Dashboard
+              <span className="hidden sm:inline">Dashboard</span>
             </Button>
           </Link>
-          <Link href="/memories">
+          <Link href="/memories" className="flex-1 sm:flex-none">
             <Button
               variant="outline"
               size="sm"
-              className={`flex items-center gap-2 border-none ${
+              aria-label="Memories"
+              title="Memories"
+              className={`flex w-full items-center justify-center gap-2 border-none px-2 sm:w-auto sm:px-3 ${
                 isActive("/memories") ? activeClass : inactiveClass
               }`}
             >
               <HiMiniRectangleStack />
-              Memories
+              <span className="hidden sm:inline">Memories</span>
             </Button>
           </Link>
-          <Link href="/apps">
+          <Link href="/apps" className="flex-1 sm:flex-none">
             <Button
               variant="outline"
               size="sm"
-              className={`flex items-center gap-2 border-none ${
+              aria-label="Apps"
+              title="Apps"
+              className={`flex w-full items-center justify-center gap-2 border-none px-2 sm:w-auto sm:px-3 ${
                 isActive("/apps") ? activeClass : inactiveClass
               }`}
             >
               <RiApps2AddFill />
-              Apps
+              <span className="hidden sm:inline">Apps</span>
             </Button>
           </Link>
-          <Link href="/settings">
+          <Link href="/settings" className="flex-1 sm:flex-none">
             <Button
               variant="outline"
               size="sm"
-              className={`flex items-center gap-2 border-none ${
+              aria-label="Settings"
+              title="Settings"
+              className={`flex w-full items-center justify-center gap-2 border-none px-2 sm:w-auto sm:px-3 ${
                 isActive("/settings") ? activeClass : inactiveClass
               }`}
             >
               <Settings />
-              Settings
+              <span className="hidden sm:inline">Settings</span>
             </Button>
           </Link>
-        </div>
-        <div className="flex items-center gap-4">
+        </nav>
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           <Button
             onClick={handleRefresh}
             variant="outline"
             size="sm"
-            className="border-zinc-700/50 bg-zinc-900 hover:bg-zinc-800"
+            aria-label="Refresh"
+            title="Refresh"
+            className="border-zinc-700/50 bg-zinc-900 px-2 hover:bg-zinc-800 sm:px-3"
           >
             <FiRefreshCcw className="transition-transform duration-300 group-hover:rotate-180" />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           <CreateMemoryDialog />
         </div>
