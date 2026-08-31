@@ -76,4 +76,4 @@ export function JsonEditor({ value, onChange }: JsonEditorProps) {
       </Button>
     </div>
   )
-} 
+}
