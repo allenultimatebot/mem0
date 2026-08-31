@@ -97,7 +97,61 @@ export function Navbar() {
           <Image src="/logo.svg" alt="OpenMemory" width={26} height={26} />
           <span className="truncate text-xl font-medium">OpenMemory</span>
         </Link>
-        <div className="order-1 flex shrink-0 items-center gap-2 lg:order-3 lg:gap-4">
+        <nav aria-label="Primary navigation" className="flex w-full items-center justify-between gap-1 lg:w-auto lg:gap-2">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
+                isActive("/") ? activeClass : inactiveClass
+              }`}
+          >
+            <Link href="/" aria-label="Dashboard" title="Dashboard" className="flex-1 lg:flex-none">
+              <HiHome />
+              <span className="hidden lg:inline">Dashboard</span>
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
+                isActive("/memories") ? activeClass : inactiveClass
+              }`}
+          >
+            <Link href="/memories" aria-label="Memories" title="Memories" className="flex-1 lg:flex-none">
+              <HiMiniRectangleStack />
+              <span className="hidden lg:inline">Memories</span>
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
+                isActive("/apps") ? activeClass : inactiveClass
+              }`}
+          >
+            <Link href="/apps" aria-label="Apps" title="Apps" className="flex-1 lg:flex-none">
+              <RiApps2AddFill />
+              <span className="hidden lg:inline">Apps</span>
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
+                isActive("/settings") ? activeClass : inactiveClass
+              }`}
+          >
+            <Link href="/settings" aria-label="Settings" title="Settings" className="flex-1 lg:flex-none">
+              <Settings />
+              <span className="hidden lg:inline">Settings</span>
+            </Link>
+          </Button>
+        </nav>
+        <div className="order-3 flex w-full justify-end gap-2 lg:order-none lg:w-auto lg:gap-4">
           <Button
             onClick={handleRefresh}
             variant="outline"
@@ -111,68 +165,6 @@ export function Navbar() {
           </Button>
           <CreateMemoryDialog />
         </div>
-        <nav aria-label="Primary navigation" className="order-2 flex w-full items-center justify-between gap-1 lg:w-auto lg:gap-2">
-          <Link href="/" aria-label="Dashboard" title="Dashboard" className="flex-1 lg:flex-none">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
-                isActive("/") ? activeClass : inactiveClass
-              }`}
-            >
-              <span>
-                <HiHome />
-                <span className="hidden lg:inline">Dashboard</span>
-              </span>
-            </Button>
-          </Link>
-          <Link href="/memories" aria-label="Memories" title="Memories" className="flex-1 lg:flex-none">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
-                isActive("/memories") ? activeClass : inactiveClass
-              }`}
-            >
-              <span>
-                <HiMiniRectangleStack />
-                <span className="hidden lg:inline">Memories</span>
-              </span>
-            </Button>
-          </Link>
-          <Link href="/apps" aria-label="Apps" title="Apps" className="flex-1 lg:flex-none">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
-                isActive("/apps") ? activeClass : inactiveClass
-              }`}
-            >
-              <span>
-                <RiApps2AddFill />
-                <span className="hidden lg:inline">Apps</span>
-              </span>
-            </Button>
-          </Link>
-          <Link href="/settings" aria-label="Settings" title="Settings" className="flex-1 lg:flex-none">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className={`flex w-full items-center justify-center gap-2 border-none px-2 lg:w-auto lg:px-3 ${
-                isActive("/settings") ? activeClass : inactiveClass
-              }`}
-            >
-              <span>
-                <Settings />
-                <span className="hidden lg:inline">Settings</span>
-              </span>
-            </Button>
-          </Link>
-        </nav>
       </div>
     </header>
   );
