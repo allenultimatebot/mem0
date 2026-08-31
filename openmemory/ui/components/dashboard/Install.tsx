@@ -96,7 +96,7 @@ export const Install = () => {
       </div>
 
       <Tabs defaultValue="claude" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 gap-0 rounded-none border-b border-zinc-800 bg-transparent p-0 sm:grid-cols-4 lg:grid-cols-9">
+        <TabsList className="grid h-auto min-h-10 w-full grid-cols-3 gap-0 rounded-none border-b border-zinc-800 bg-transparent p-0 sm:grid-cols-4 lg:h-10 lg:grid-cols-9">
           {allTabs.map(({ key, label, icon }) => (
             <TabsTrigger
               key={key}
